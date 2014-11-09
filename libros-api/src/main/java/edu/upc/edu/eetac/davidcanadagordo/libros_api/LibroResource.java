@@ -7,7 +7,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Link;
+
+
+import javax.ws.rs.ServerErrorException;
+import javax.ws.rs.core.Response;
 
 import edu.upc.edu.eetac.davidcanadagordo.libros_api.model.Libro;
 import edu.upc.edu.eetac.davidcanadagordo.libros_api.model.LibrosCollection;
@@ -16,8 +19,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+
 
 @Path("/libros")
 public class LibroResource {
@@ -25,33 +27,36 @@ public class LibroResource {
 	private DataSource ds = DataSourceSPA.getInstance().getDataSource();
 	
 	private String GET_LIBROS_QUERY = "SELECT * FROM libros";
+	
 	@GET
 	@Produces(MediaType.LIBROS_API_LIBRO_COLLECTION)
 	public LibrosCollection getLibros() {
-	       LibrosCollection libros = new LibrosCollection();
-	 
-		Connection conn = null;
+		
+		System.out.println("no conectados a la BD"); //si que llega al menos
+		LibrosCollection libros = new LibrosCollection();
+	    Connection conn = null;
 		try {
 			conn = ds.getConnection();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-	 
+		System.out.println("conectados a la BD"); //de aqui no pasa
 		PreparedStatement stmt = null;
 		try {
 			stmt = conn.prepareStatement(GET_LIBROS_QUERY);
 			ResultSet rs = stmt.executeQuery();
+			System.out.println(stmt);
 			while (rs.next()) {
 				Libro libro = new Libro();
-				libro.setId(rs.getInt("idlibro"));
 				libro.setId(rs.getInt("id"));
 				libro.setTitulo(rs.getString("titulo"));
 				libro.setAutor(rs.getString("autor"));
+				libro.setLengua(rs.getString("lengua"));
 				libro.setEdicion(rs.getString("edicion"));
-				libro.setEditorial(rs.getString("editorial"));
 				libro.setFecha_ed(rs.getDate("fecha_ed"));
 				libro.setFecha_imp(rs.getDate("fecha_imp"));
-				libro.setLengua(rs.getString("lengua"));
+				libro.setEditorial(rs.getString("editorial"));
+				
                 libros.add(libro);
 			}
 		} catch (SQLException e) {
@@ -69,7 +74,7 @@ public class LibroResource {
 		return libros;
 	}
 
-	private String GET_LIBROS_AUTOR = "SELECT * FROM libros where autor LIKE ? ";
+/*	private String GET_LIBROS_AUTOR = "SELECT * FROM libros where autor LIKE ? ";
 	private String GET_LIBROS_TITULO = "SELECT * FROM libros where titulo LIKE ? ";
 	//private String GET_LIBROS_SEARCH = "SELECT * FROM libros where titulo LIKE ? and autor LIKE ?";
 	
@@ -135,7 +140,8 @@ public LibrosCollection SearchLibros(@QueryParam("titulo") String titulo,
 		 
 			return libros;
 		}
-
+*/
+	/*
 private String GET_LIBRO_BY_ID = "SELECT * FROM Libro where id = ?";
 
 @GET
@@ -152,7 +158,7 @@ public Libro getLibro(@PathParam("id") int id) {
 	}
  
 	PreparedStatement stmt = null;
-	System.out.println("conectados a la BD");
+	c
 	try {
 		stmt = conn.prepareStatement(GET_LIBRO_BY_ID);
 		System.out.println(stmt);
@@ -181,6 +187,8 @@ public Libro getLibro(@PathParam("id") int id) {
 		return libro;
 	
 }
+
+*/
 
 	}
 

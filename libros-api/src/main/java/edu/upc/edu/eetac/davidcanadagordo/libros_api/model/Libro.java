@@ -73,8 +73,8 @@ public class Libro {
 		this.links = links;
 	}
 
-	public void add(Link link) {
-		links.add(link);
+	public void add(Link libro) {
+		links.add(libro);
 	}
 }
 
