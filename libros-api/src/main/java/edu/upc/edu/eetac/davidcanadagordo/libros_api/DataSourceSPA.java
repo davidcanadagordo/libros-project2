@@ -1,6 +1,7 @@
 package edu.upc.edu.eetac.davidcanadagordo.libros_api;
 
 import javax.naming.Context;
+
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
@@ -16,7 +17,7 @@ public class DataSourceSPA {
 			try {
 				envContext = new InitialContext();
 				Context initContext = (Context) envContext.lookup("java:/comp/env");
-				dataSource = (DataSource) initContext.lookup("jdbc/librodb");
+				dataSource = (DataSource) initContext.lookup("jdbc/librodb"); 
 			} catch (NamingException e1) {
 				e1.printStackTrace();
 			}

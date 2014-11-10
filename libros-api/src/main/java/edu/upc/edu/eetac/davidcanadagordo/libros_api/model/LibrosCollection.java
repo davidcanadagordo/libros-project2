@@ -10,14 +10,14 @@ public class LibrosCollection {
  
 	public LibrosCollection() {
 		super();
-		libros = new ArrayList<>();
+		libros = new ArrayList<Libro>();
 	}
  
 	public List<Libro> getLibro() {
 		return libros;
 	}
  
-	public void setStings(List<Libro> libros) {
+	public void setLibros(List<Libro> libros) {
 		this.libros = libros;
 	}
  
