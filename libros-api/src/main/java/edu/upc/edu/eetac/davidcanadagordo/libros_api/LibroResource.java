@@ -16,19 +16,33 @@ import javax.ws.rs.QueryParam;
 
 
 import javax.ws.rs.ServerErrorException;
+import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.EntityTag;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
-import com.mysql.jdbc.Statement;
+
+
+
+
+
+
+
 
 import edu.upc.edu.eetac.davidcanadagordo.libros_api.model.Autor;
 import edu.upc.edu.eetac.davidcanadagordo.libros_api.model.Libro;
 import edu.upc.edu.eetac.davidcanadagordo.libros_api.model.LibrosCollection;
+import edu.upc.edu.eetac.davidcanadagordo.libros_api.DataSourceSPA;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Date;
+
 
 
 @Path("/libros")
@@ -36,10 +50,10 @@ public class LibroResource {
 	
 	private DataSource ds = DataSourceSPA.getInstance().getDataSource();
 	private SecurityContext security;
-	private boolean admin, registered;
+	//private boolean admin, registered;
 	
 ////muestra la BD de libros
-	private String GET_LIBROS_QUERY = "SELECT * FROM libros";
+	private String GET_LIBROS_QUERY = "SELECT * FROM libros ;";
 	
 	@GET
 	@Produces(MediaType.LIBROS_API_LIBRO_COLLECTION)
@@ -56,6 +70,7 @@ public class LibroResource {
 					Response.Status.SERVICE_UNAVAILABLE);
 		}
 		System.out.println("conectados a la BD");
+		
 		PreparedStatement stmt = null;
 		try {
 			stmt = conn.prepareStatement(GET_LIBROS_QUERY);
@@ -92,18 +107,48 @@ public class LibroResource {
 				e.printStackTrace();
 			}
 		}
-	 
+		System.out.println(libros);
 		return libros;
 	}
 
+/*	@GET
+	@Path("/{id}")
+	@Produces(MediaType.LIBROS_API_LIBRO)
+	public Response getSting(@PathParam("id") String id,
+			@Context Request request) {
+		// Create CacheControl
+		CacheControl cc = new CacheControl();
+	 
+		Libro libro = getLibroFromDatabase(id);
+	 
+		// Calculate the ETag on last modified date of user resource
+		EntityTag eTag = new EntityTag(Long.toString(libro.getLastModified()));
+	 
+		// Verify if it matched with etag available in http request
+		Response.ResponseBuilder rb = request.evaluatePreconditions(eTag);
+	 
+		// If ETag matches the rb will be non-null;
+		// Use the rb to return the response without any further processing
+		if (rb != null) {
+			return rb.cacheControl(cc).tag(eTag).build();
+		}
+	 
+		// If rb is null then either it is first time request; or resource is
+		// modified
+		// Get the updated representation and return with Etag attached to it
+		rb = Response.ok(libro).cacheControl(cc).tag(eTag);
+	 
+		return rb.build();
+	}	
+*/
 ////búsqueda para un usuario de autor y titulo o individual
 	private String GET_LIBROS_AUTOR = "SELECT * FROM libros where autor LIKE ? ;";
 	private String GET_LIBROS_TITULO = "SELECT * FROM libros where titulo LIKE ? ;";
-	private String GET_LIBROS_SEARCH = "SELECT * FROM libros where titulo LIKE ? and autor LIKE ?";
+	private String GET_LIBROS_SEARCH = "SELECT * FROM libros where titulo LIKE ? and autor LIKE ? ;";
 	
 @GET
 @Path("/search")
-@Produces(MediaType.LIBROS_API_LIBRO_COLLECTION)
+@Produces(MediaType.LIBROS_API_LIBRO)
 public LibrosCollection SearchLibros(@QueryParam("titulo") String titulo,
 		@QueryParam("autor") String autor) {
 	        LibrosCollection libros = new LibrosCollection();
@@ -139,13 +184,10 @@ public LibrosCollection SearchLibros(@QueryParam("titulo") String titulo,
 		        stmt.setString(1, autor);   //(1, "%"+autor+"%");
 		    	}
 		    	
-
-
-				ResultSet rs = stmt.executeQuery();
+                ResultSet rs = stmt.executeQuery();
 				System.out.println(stmt);
 				while (rs.next()) {
 					Libro libro = new Libro();
-					
 					libro.setId(rs.getInt("id"));
 					libro.setTitulo(rs.getString("titulo"));
 					libro.setAutor(rs.getString("autor"));
@@ -167,7 +209,7 @@ public LibrosCollection SearchLibros(@QueryParam("titulo") String titulo,
 					e.printStackTrace();
 				}
 			}
-		 
+		    System.out.println(libros);
 			return libros;
 		}
 
@@ -220,8 +262,227 @@ public Libro getLibro(@PathParam("id") int id) {
 			e.printStackTrace();
 		}
 		}
+	    System.out.println(libro);
 		return libro;
 	
+}
+
+private Libro getLibroFromDatabase(String id) {
+	Libro libro = new Libro();
+
+	Connection conn = null;
+	try {
+		conn = ds.getConnection();
+	} catch (SQLException e) {
+		throw new ServerErrorException("Could not connect to the database",
+				Response.Status.SERVICE_UNAVAILABLE);
+	}
+
+	PreparedStatement stmt = null;
+	try {
+		stmt = conn.prepareStatement(GET_LIBRO_BY_ID);
+		stmt.setInt(1, Integer.valueOf(id));
+		ResultSet rs = stmt.executeQuery();
+		if (rs.next()) {
+			libro.setId(rs.getInt("id"));
+			libro.setTitulo(rs.getString("titulo"));
+			libro.setAutor(rs.getString("autor"));
+			libro.setLengua(rs.getString("lengua"));
+			libro.setEdicion(rs.getString("edicion"));
+			libro.setFecha_ed(rs.getDate("fecha_ed"));
+			libro.setFecha_imp(rs.getDate("fecha_imp"));
+			libro.setEditorial(rs.getString("editorial"));
+		} else {
+			throw new NotFoundException("No se encuentra ningun libro con ID ="
+					+ id);
+		}
+
+	} catch (SQLException e) {
+		throw new ServerErrorException(e.getMessage(),
+				Response.Status.INTERNAL_SERVER_ERROR);
+	} finally {
+		try {
+			if (stmt != null)
+				stmt.close();
+			conn.close();
+		} catch (SQLException e) {
+		}
+	}
+
+	return libro;
+}
+
+//admin crear una ficha de libro
+private String INSERT_LIBRO = "INSERT into libro (titulo, autor, lengua, edicion, fecha_ed, fecha_imp, editorial) values (?,?,?,?,?,?,?);";
+
+@POST
+@Consumes(MediaType.LIBROS_API_LIBRO)
+@Produces(MediaType.LIBROS_API_LIBRO)
+
+public Libro CreateLibro(Libro libro)
+{
+	
+//solo puede el admin
+if (!security.isUserInRole("admin"))
+throw new ForbiddenException("No se le permite crear un autor");
+
+	Connection conn = null;
+	try {
+		conn = ds.getConnection();
+	} catch (SQLException e) {
+		throw new ServerErrorException("Could not connect to the database",
+				Response.Status.SERVICE_UNAVAILABLE);
+	}
+	
+	PreparedStatement stmt = null;
+	try{
+		stmt = conn.prepareStatement(INSERT_LIBRO);
+		
+		stmt.setString(1, libro.getTitulo());
+		stmt.setString(2, libro.getAutor());
+		stmt.setString(3, libro.getLengua());
+		stmt.setString(4, libro.getEdicion());
+		stmt.setDate(5, (java.sql.Date) libro.getFecha_ed());
+		stmt.setDate(6, (java.sql.Date) libro.getFecha_imp());
+		stmt.setString(7, libro.getEditorial());
+		stmt.executeUpdate();
+		System.out.println(stmt);
+		ResultSet rs = stmt.getGeneratedKeys();
+		
+		if (rs.next()) {
+			int id = rs.getInt(1);
+ 
+			libro = getLibroFromDatabase(Integer.toString(id));
+		} else {
+			// Something has failed...
+		}
+	} catch (SQLException e) {
+		e.printStackTrace();
+	} finally {
+		try {
+			if (stmt != null)
+				stmt.close();
+			conn.close();
+		} catch (SQLException e) {
+		}
+	}
+		
+
+
+return libro;
+
+}
+
+///////admin elimina la ficha de un libro
+
+private String DELETE_LIBRO = "DELETE FROM libros Where id = ?;";
+
+@DELETE
+@Path("/{id}")
+
+public void DeleteLibro(@PathParam("id") String id)
+{
+	//solo puede el admin
+	if (!security.isUserInRole("admin"))
+		throw new ForbiddenException("You are not allowed to delete a book");
+	
+	Connection conn = null;
+	try {
+		conn = ds.getConnection();
+	} catch (SQLException e) {
+		e.printStackTrace();
+	}
+ 
+	PreparedStatement stmt = null;
+	try {
+		stmt = conn.prepareStatement(DELETE_LIBRO);
+	    stmt.setInt(1, Integer.valueOf(id));
+		System.out.println(stmt);
+		
+		int rows = stmt.executeUpdate();
+		if (rows == 0)
+		{
+			throw new NotFoundException("No hay un libro con este nombre"
+					+ id);// Updating inexistent libro
+		}
+		else
+		{
+			System.out.println("Autor eliminado");
+		}
+	} catch (SQLException e) {
+		throw new ServerErrorException(e.getMessage(),
+				Response.Status.INTERNAL_SERVER_ERROR);
+	} finally {
+		try {
+			if (stmt != null)
+				stmt.close();
+			conn.close();
+		} catch (SQLException e) {
+		}
+	}
+ 
+	//no retorna nada el delete, es un void!
+}
+//////admin actualiza ficha de libro
+
+private String UPDATE_LIBRO = "UPDATE libro set titulo=ifnull(?, titulo), autor=ifnull(?, autor), lengua=ifnull(?, lengua), edicion=ifnull(?,edicion), fecha_ed=ifnull(?, fecha_ed), fecha_imp=ifnull(?, fecha_imp), editorial=ifnull(?, editorial) where idautor =?;";
+@PUT
+@Path("/id")
+@Consumes(MediaType.LIBROS_API_LIBRO)
+@Produces(MediaType.LIBROS_API_LIBRO)
+
+public Libro UpdateLibro(@PathParam("id") String id, Libro libro) {
+
+	//solo puede admin
+	if (!security.isUserInRole("admin"))
+		throw new ForbiddenException("No se le permite actualizar libro ");
+	
+	Connection conn = null;
+	try {
+		conn = ds.getConnection();
+	} catch (SQLException e) {
+		throw new ServerErrorException("Could not connect to the database",
+				Response.Status.SERVICE_UNAVAILABLE);
+	}
+	
+	PreparedStatement stmt = null;
+	try{
+		stmt = conn.prepareStatement(UPDATE_LIBRO);
+		
+		stmt.setString(1, libro.getTitulo());
+		stmt.setString(2, libro.getAutor());
+		stmt.setString(3, libro.getLengua());
+		stmt.setString(4, libro.getEdicion());
+		stmt.setDate(5, (java.sql.Date) libro.getFecha_ed());
+		stmt.setDate(6, (java.sql.Date) libro.getFecha_imp());
+		stmt.setString(7, libro.getEditorial());
+		stmt.setInt(8, Integer.valueOf(id));  //lo pone tambien en Atenea
+		stmt.executeUpdate();
+		
+		int rows = stmt.executeUpdate();
+		if (rows == 1)
+			libro = getLibroFromDatabase(id);
+		else {
+			throw new NotFoundException("No hay un libro con este nombre"
+					+ id);// Updating inexistent libro
+		}
+		
+	} catch (SQLException e) {
+		throw new ServerErrorException(e.getMessage(),
+				Response.Status.INTERNAL_SERVER_ERROR);
+	} finally {
+		try {
+			if (stmt != null)
+				stmt.close();
+			conn.close();
+		} catch (SQLException e) {
+		}
+	}
+		
+
+
+return libro;
+
 }
 
 
@@ -236,35 +497,42 @@ private String INSERT_AUTOR = "insert into autor (name) values (?)";
 
 public Autor CreateAutor(Autor autor)
 {
-	
+	//solo puede el admin
 	if (!security.isUserInRole("admin"))
-	throw new ForbiddenException("You are not allowed to create a autor");
+	throw new ForbiddenException("No se le permite crear un autor");
 	
-	//Autor autor = new Autor();
+	
 	Connection conn = null;
 	try {
 		conn = ds.getConnection();
 	} catch (SQLException e) {
-		e.printStackTrace();
+		throw new ServerErrorException("Could not connect to the database",
+				Response.Status.SERVICE_UNAVAILABLE);
 	}
  
 	PreparedStatement stmt = null;
 	try {
-		stmt = conn.prepareStatement(INSERT_AUTOR);
+		stmt = conn.prepareStatement(INSERT_AUTOR,Statement.RETURN_GENERATED_KEYS);
 				
  
 		stmt.setString(1, autor.getName());
 		
 		System.out.println(autor.getName());
 		System.out.println(stmt);
+		stmt.executeUpdate();
+		ResultSet rs = stmt.getGeneratedKeys();
 		
-		ResultSet rs = stmt.executeQuery();
-		if (rs.next()) {
-			autor.setIdautor(rs.getInt("id"));
-			autor.setName(rs.getString("titulo"));
+	  	if (rs.next()) {
 			
-		 } else {
-			throw new BadRequestException("You are not allowed to create a autor");
+			int idautor = rs.getInt(1);
+			//autor = getLibroFromDatabase(Integer.toString(idautor));
+			
+			/*autor.setIdautor(rs.getInt("id"));
+			autor.setName(rs.getString("titulo"));*/
+			
+		 } 
+		else {
+			throw new BadRequestException("No se le permite crear al autor");
 		}
            
 	} catch (SQLException e) {
@@ -284,15 +552,14 @@ public Autor CreateAutor(Autor autor)
 
 //////admin elimina una ficha de autor
 
-private String DELETE_AUTOR = "DELETE FROM Autor Where name LIKE ?";
+private String DELETE_AUTOR = "DELETE FROM Autor Where idautor = ?;";
 
 @DELETE
 @Path("/autor/{idautor}")
-@Consumes(MediaType.LIBROS_API_LIBRO)
-@Produces(MediaType.LIBROS_API_LIBRO)
 
-public Autor DeleteAutor(Autor autor)
+public void DeleteAutor(@PathParam("idautor") String idautor)
 {
+	//solo puede el admin
 	if (!security.isUserInRole("admin"))
 		throw new ForbiddenException("You are not allowed to delete a book");
 	
@@ -306,17 +573,14 @@ public Autor DeleteAutor(Autor autor)
 	PreparedStatement stmt = null;
 	try {
 		stmt = conn.prepareStatement(DELETE_AUTOR);
-				
- 
-		stmt.setString(1, autor.getName());
-		System.out.println(autor.getName());
+	    stmt.setInt(1, Integer.valueOf(idautor));
 		System.out.println(stmt);
-		stmt.executeUpdate();
+		
 		int rows = stmt.executeUpdate();
 		if (rows == 0)
 		{
 			throw new NotFoundException("No hay un autor con este nombre"
-					+ autor);// Updating inexistent sting
+					+ idautor);// Updating inexistent sting
 		}
 		else
 		{
@@ -334,21 +598,22 @@ public Autor DeleteAutor(Autor autor)
 		}
 	}
  
-	return autor;
+	//no retorna nada el delete, es un void!
 }
 
 ////////admin actualiza ficha de autor
 
-private String UPDATE_AUTOR = "UPDATE stings set name=ifnull(?, name)";
+private String UPDATE_AUTOR = "UPDATE autor set name=ifnull(?, name) where idautor =?;";
 
 @PUT
 @Path("/autor/{name}")
 @Consumes(MediaType.LIBROS_API_LIBRO)
 @Produces(MediaType.LIBROS_API_LIBRO)
 
-public Autor UpdateAutor(Autor autor) {
+public Autor UpdateAutor(@PathParam("idautor") String idautor, Autor autor) {
+	
 	if (!security.isUserInRole("admin"))
-		throw new ForbiddenException("You are not allowed to update a book");
+		throw new ForbiddenException("No se le permite actualizar autor");
 	Connection conn = null;
 	try {
 		conn = ds.getConnection();
@@ -360,7 +625,7 @@ public Autor UpdateAutor(Autor autor) {
 	try {
 		stmt = conn.prepareStatement(UPDATE_AUTOR);
 		stmt.setString(1, autor.getName());
-		
+		stmt.setInt(2, Integer.valueOf(idautor));
  
 		int rows = stmt.executeUpdate();
 		if (rows == 0)
@@ -370,11 +635,12 @@ public Autor UpdateAutor(Autor autor) {
 		}
 		else
 		{
-			System.out.println("Autor eliminado");
+			System.out.println("Autor actualizado");
 		}
  
 	} catch (SQLException e) {
-		e.printStackTrace();
+		throw new ServerErrorException(e.getMessage(),
+				Response.Status.INTERNAL_SERVER_ERROR);
 	} finally {
 		try {
 			if (stmt != null)

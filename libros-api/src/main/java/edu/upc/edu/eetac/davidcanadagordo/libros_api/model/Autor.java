@@ -2,8 +2,8 @@ package edu.upc.edu.eetac.davidcanadagordo.libros_api.model;
 
 public class Autor {
 
-	public String name;
-	public int idautor;
+	private String name;
+	private int idautor;
 
 	public int getIdautor() {
 		return idautor;

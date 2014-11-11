@@ -76,6 +76,7 @@
 	</login-config>
 	<security-role>
 		<role-name>registered</role-name>
+		
 	</security-role>
 
 	<security-constraint>
