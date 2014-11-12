@@ -1,6 +1,6 @@
 package edu.upc.edu.eetac.davidcanadagordo.libros_api;
 
-import javax.sql.DataSource;
+import javax.sql.DataSource; 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -14,7 +14,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-
 import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
@@ -22,18 +21,10 @@ import javax.ws.rs.core.EntityTag;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
-
-
-
-
-
-
-
-
-
 import edu.upc.edu.eetac.davidcanadagordo.libros_api.model.Autor;
 import edu.upc.edu.eetac.davidcanadagordo.libros_api.model.Libro;
 import edu.upc.edu.eetac.davidcanadagordo.libros_api.model.LibrosCollection;
+import edu.upc.edu.eetac.davidcanadagordo.libros_api.model.Resena;
 import edu.upc.edu.eetac.davidcanadagordo.libros_api.DataSourceSPA;
 
 import java.sql.Connection;
@@ -41,7 +32,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Date;
 
 
 
@@ -49,15 +39,16 @@ import java.util.Date;
 public class LibroResource {
 	
 	private DataSource ds = DataSourceSPA.getInstance().getDataSource();
+	@Context
 	private SecurityContext security;
-	//private boolean admin, registered;
+	
 	
 ////muestra la BD de libros
-	private String GET_LIBROS_QUERY = "SELECT * FROM libros ;";
+	private String GET_LIBROS_QUERY = "SELECT * FROM libros";
 	
 	@GET
 	@Produces(MediaType.LIBROS_API_LIBRO_COLLECTION)
-	public LibrosCollection getLibros() {
+	public LibrosCollection getLibro() {
 		
 		System.out.println("no conectados a la BD"); 
 		LibrosCollection libros = new LibrosCollection();
@@ -77,8 +68,7 @@ public class LibroResource {
 			ResultSet rs = stmt.executeQuery();
 		
 			System.out.println(stmt);
-			while (rs.next()) 
-			{
+			while (rs.next()){
 				
 				Libro libro = new Libro();
 				libro.setId(rs.getInt("id"));
@@ -89,8 +79,6 @@ public class LibroResource {
 				libro.setFecha_ed(rs.getDate("fecha_ed"));
 				libro.setFecha_imp(rs.getDate("fecha_imp"));
 				libro.setEditorial(rs.getString("editorial"));
-				
-				
 				libros.add(libro);
 			    
 			}
@@ -342,8 +330,8 @@ throw new ForbiddenException("No se le permite crear un autor");
 		stmt.setString(2, libro.getAutor());
 		stmt.setString(3, libro.getLengua());
 		stmt.setString(4, libro.getEdicion());
-		stmt.setDate(5, (java.sql.Date) libro.getFecha_ed());
-		stmt.setDate(6, (java.sql.Date) libro.getFecha_imp());
+		stmt.setDate(5, libro.getFecha_ed());
+		stmt.setDate(6, libro.getFecha_imp());
 		stmt.setString(7, libro.getEditorial());
 		stmt.executeUpdate();
 		System.out.println(stmt);
@@ -353,6 +341,8 @@ throw new ForbiddenException("No se le permite crear un autor");
 			int id = rs.getInt(1);
  
 			libro = getLibroFromDatabase(Integer.toString(id));
+			System.out.println("libro creado");
+			
 		} else {
 			// Something has failed...
 		}
@@ -390,7 +380,8 @@ public void DeleteLibro(@PathParam("id") String id)
 	try {
 		conn = ds.getConnection();
 	} catch (SQLException e) {
-		e.printStackTrace();
+		throw new ServerErrorException("Could not connect to the database",
+				Response.Status.SERVICE_UNAVAILABLE);
 	}
  
 	PreparedStatement stmt = null;
@@ -453,8 +444,8 @@ public Libro UpdateLibro(@PathParam("id") String id, Libro libro) {
 		stmt.setString(2, libro.getAutor());
 		stmt.setString(3, libro.getLengua());
 		stmt.setString(4, libro.getEdicion());
-		stmt.setDate(5, (java.sql.Date) libro.getFecha_ed());
-		stmt.setDate(6, (java.sql.Date) libro.getFecha_imp());
+		stmt.setDate(5, libro.getFecha_ed());
+		stmt.setDate(6, libro.getFecha_imp());
 		stmt.setString(7, libro.getEditorial());
 		stmt.setInt(8, Integer.valueOf(id));  //lo pone tambien en Atenea
 		stmt.executeUpdate();
@@ -488,7 +479,7 @@ return libro;
 
 
 ///////admin crea una ficha de autor
-private String INSERT_AUTOR = "insert into autor (name) values (?)";
+private String INSERT_AUTOR = "insert into autor (name) values (?);";
 
 @POST
 @Path("/autor")
@@ -526,7 +517,7 @@ public Autor CreateAutor(Autor autor)
 			
 			int idautor = rs.getInt(1);
 			//autor = getLibroFromDatabase(Integer.toString(idautor));
-			
+			System.out.println("autor creado");
 			/*autor.setIdautor(rs.getInt("id"));
 			autor.setName(rs.getString("titulo"));*/
 			
@@ -552,7 +543,7 @@ public Autor CreateAutor(Autor autor)
 
 //////admin elimina una ficha de autor
 
-private String DELETE_AUTOR = "DELETE FROM Autor Where idautor = ?;";
+private String DELETE_AUTOR = "DELETE FROM Autor where idautor = ?;";
 
 @DELETE
 @Path("/autor/{idautor}")
@@ -567,7 +558,8 @@ public void DeleteAutor(@PathParam("idautor") String idautor)
 	try {
 		conn = ds.getConnection();
 	} catch (SQLException e) {
-		e.printStackTrace();
+		throw new ServerErrorException("Could not connect to the database",
+				Response.Status.SERVICE_UNAVAILABLE);
 	}
  
 	PreparedStatement stmt = null;
@@ -623,6 +615,7 @@ public Autor UpdateAutor(@PathParam("idautor") String idautor, Autor autor) {
  
 	PreparedStatement stmt = null;
 	try {
+		
 		stmt = conn.prepareStatement(UPDATE_AUTOR);
 		stmt.setString(1, autor.getName());
 		stmt.setInt(2, Integer.valueOf(idautor));
@@ -652,10 +645,284 @@ public Autor UpdateAutor(@PathParam("idautor") String idautor, Autor autor) {
  
 	return autor;
 	}
+/*
+private void validateUser(String stingid) {
+    Sting sting = getStingFromDatabase(stingid);
+    String username = sting.getUsername();
+	if (!security.getUserPrincipal().getName()
+			.equals(username)
+		throw new ForbiddenException(
+				"You are not allowed to modify this sting.");
+}
+*/
+////////crear una reseña, solo puede el registrado
+private String INSERT_RESENA = "insert into resenas (idlibros, username, fecha, texto) values (?,?,?,?);";
 
+@POST
+@Path("/{idlibros}/resenas")
+@Consumes(MediaType.LIBROS_API_RESENA)
+@Produces(MediaType.LIBROS_API_RESENA)
+
+public Resena CreateResena (@PathParam("idlibros") String idlibros, Resena resena)
+{
+	
+	if (!security.isUserInRole("registered"))
+		throw new ForbiddenException(
+				"No tienes permitido hacer una reseña de un libro");
+	String registrado = security.getUserPrincipal().getName(); //obtengo nombre del registrado
+	
+	System.out.println("Estas registrado con nombre" + registrado);
+	
+	Connection conn = null;
+	try {
+		conn = ds.getConnection();
+	} catch (SQLException e) {
+		throw new ServerErrorException("Could not connect to the database",
+				Response.Status.SERVICE_UNAVAILABLE);
+	}
+ 
+	PreparedStatement stmt = null;
+	try {
+		
+		
+		stmt = conn.prepareStatement(INSERT_RESENA,Statement.RETURN_GENERATED_KEYS);
+				
+		stmt.setInt(1, Integer.valueOf(idlibros));
+		stmt.setString(2, security.getUserPrincipal().getName()); //consigues el autor de la resena
+		stmt.setDate(3, resena.getFecha());
+		stmt.setString(4, resena.getTexto());
+		
+		
+		System.out.println(stmt);
+		stmt.executeUpdate();
+		ResultSet rs = stmt.getGeneratedKeys();
+		
+	  	if (rs.next()) {
+			
+			int id = rs.getInt(1);
+			//autor = getLibroFromDatabase(Integer.toString(idautor));
+			System.out.println("resena creada");
+			/*autor.setIdautor(rs.getInt("id"));
+			autor.setName(rs.getString("titulo"));*/
+			
+		 } 
+		else {
+			throw new BadRequestException("No se le permite crear al autor");
+		}
+           
+	} catch (SQLException e) {
+		throw new ServerErrorException(e.getMessage(),
+				Response.Status.INTERNAL_SERVER_ERROR);
+	} finally {
+		try {
+			if (stmt != null)
+				stmt.close();
+			conn.close();
+		} catch (SQLException e) {
+		}
+	}
+ 
+	
+	return resena;
+}
+
+///////////Borrar una reseña, solo puede el usuario registrado
+private String BORRAR_RESENA = "DELETE FROM resenas where idres = ? and idlibros = ?;";
+
+
+@DELETE
+@Path("/{idlibro}/resenas/{idres}")
+@Consumes(MediaType.LIBROS_API_RESENA)
+@Produces(MediaType.LIBROS_API_RESENA)
+
+public void deleteReview(@PathParam("idlibro") String idlibro, @PathParam("idres") String idres) {
+	{
+		//tienes que estar registrado
+		if (!security.isUserInRole("registrado"))
+			throw new ForbiddenException("No se te permite borrar una reseña");
+		
+		Connection conn = null;
+		try {
+			conn = ds.getConnection();
+		} catch (SQLException e) {
+			throw new ServerErrorException("Could not connect to the database",
+					Response.Status.SERVICE_UNAVAILABLE);
+		}
+		System.out.println("conectados a la bd");
+		System.out.println("idlibro" + idlibro + "idres" +idres);
+		PreparedStatement stmt = null;
+		try {
+			stmt = conn.prepareStatement(BORRAR_RESENA);
+		    stmt.setInt(1, Integer.valueOf(idlibro));
+		    stmt.setInt(2, Integer.valueOf(idres));
+			System.out.println(stmt);
+			
+			int rows = stmt.executeUpdate();
+			if (rows == 0)
+			{
+				throw new NotFoundException("No hay una reseña con este id"
+						+ idres + "ni con este idlibro" + idlibro);
+			}
+			else
+			{
+				System.out.println("Reseña eliminado");
+			}
+		} catch (SQLException e) {
+			throw new ServerErrorException(e.getMessage(),
+					Response.Status.INTERNAL_SERVER_ERROR);
+		} finally {
+			try {
+				if (stmt != null)
+					stmt.close();
+				conn.close();
+			} catch (SQLException e) {
+			}
+		}
+	 
+		//no retorna nada el delete, es un void!
+	}
+	}
+
+
+///////actualizamos una reseña de un usuario registrado
+private String UPDATE_RESENA = "UPDATE resenas set texto=ifnull(?, texto) where idlibro = ? and idres = ?;";
+
+@PUT
+@Path("/{idlibro}/resenas/{idres}")
+@Consumes(MediaType.LIBROS_API_RESENA)
+@Produces(MediaType.LIBROS_API_RESENA)
+
+public Resena UpdateResena (@PathParam("idlibro") String idlibro, @PathParam("idres") String idres, Resena resena)
+{
+	
+	//usuario registrado
+	if (!security.isUserInRole("registered"))
+		throw new ForbiddenException(
+	
+				"You are not allowed to create reviews for a book");
+	Connection conn = null;
+	try {
+		conn = ds.getConnection();
+	} catch (SQLException e) {
+		e.printStackTrace();
+	}
+ 
+	PreparedStatement stmt = null;
+	try {
+		stmt = conn.prepareStatement(UPDATE_RESENA);
+		
+		stmt.setInt(1, Integer.valueOf(idlibro));
+		stmt.setInt(2, Integer.valueOf(idres));
+		stmt.setString(3, resena.getTexto());
+ 
+		int rows = stmt.executeUpdate();
+		if (rows == 0)
+		{
+			throw new NotFoundException("No hay una reseña con este id"
+					+ idres + "ni con este idlibro" + idlibro);
+		}
+		else
+		{
+			System.out.println("Reseña actualizado");
+		}
+ 
+	} catch (SQLException e) {
+		throw new ServerErrorException(e.getMessage(),
+				Response.Status.INTERNAL_SERVER_ERROR);
+	} finally {
+		try {
+			if (stmt != null)
+				stmt.close();
+			conn.close();
+		} catch (SQLException e) {
+		}
+	}
+ 
+	
+return resena;
 
 
 }
+
+private String GET_RESENA_BY_ID = " SELECT * from resenas where idlibro = ? and idres = ?;";
+private Resena getResenaFromDatabase(String idlibro, String idres) {
+	
+	Resena resena = new Resena();
+
+	Connection conn = null;
+	try {
+		conn = ds.getConnection();
+	} catch (SQLException e) {
+		throw new ServerErrorException("Could not connect to the database",
+				Response.Status.SERVICE_UNAVAILABLE);
+	}
+
+	PreparedStatement stmt = null;
+	try {
+		stmt = conn.prepareStatement(GET_RESENA_BY_ID);
+		stmt.setInt(1, Integer.valueOf(idlibro));
+		stmt.setInt(1, Integer.valueOf(idres));
+		ResultSet rs = stmt.executeQuery();
+		if (rs.next()) {
+			resena.setIdres(rs.getInt("idres"));
+			resena.setIdlibros(rs.getInt("idlibro"));
+			resena.setUsername(rs.getString("username"));
+			resena.setFecha(rs.getDate("fecha"));
+			resena.setTexto(rs.getString("texto"));
+			
+		} else {
+			throw new NotFoundException("No hay una reseña con este id"
+					+ idres + "ni con este idlibro" + idlibro);
+		}
+
+	} catch (SQLException e) {
+		throw new ServerErrorException(e.getMessage(),
+				Response.Status.INTERNAL_SERVER_ERROR);
+	} finally {
+		try {
+			if (stmt != null)
+				stmt.close();
+			conn.close();
+		} catch (SQLException e) {
+		}
+	}
+
+	return resena;
+}
+/*
+@GET
+@Path("/resena/{idres}")
+@Produces(MediaType.LIBROS_API_RESENA)
+public Response getOpinion(@PathParam("idlibro") String idlibro, @PathParam("idres") String idres,
+		@Context Request request) {
+	// Create CacheControl
+	CacheControl cc = new CacheControl();
+
+	Resena resena = getResenaFromDatabase(idlibro,idres);
+
+	// Calculate the ETag on last modified date of user resource
+	EntityTag eTag = new EntityTag(Long.toString(resena.getLastModified()));
+
+	// Verify if it matched with etag available in http request
+	Response.ResponseBuilder rb = request.evaluatePreconditions(eTag);
+
+	// If ETag matches the rb will be non-null;
+	// Use the rb to return the response without any further processing
+	if (rb != null) {
+		return rb.cacheControl(cc).tag(eTag).build();
+	}
+
+	// If rb is null then either it is first time request; or resource is
+	// modified
+	// Get the updated representation and return with Etag attached to it
+	rb = Response.ok(resena).cacheControl(cc).tag(eTag);
+
+	return rb.build();
+}*/
+}
+
+
+
 
 
 

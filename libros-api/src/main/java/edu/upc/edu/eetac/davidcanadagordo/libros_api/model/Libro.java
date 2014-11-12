@@ -1,7 +1,7 @@
 package edu.upc.edu.eetac.davidcanadagordo.libros_api.model;
 
 
-import java.util.Date;
+import java.sql.Date;
 import java.util.List;
 import javax.ws.rs.core.Link;
 
@@ -71,7 +71,7 @@ public class Libro {
 	public void setLinks(List<Link> links) {
 		this.links = links;
 	}
-
+	
 	
 	
 	/*public int id;

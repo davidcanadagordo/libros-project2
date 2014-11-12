@@ -10,7 +10,7 @@ public class LibrosCollection {
  
 	public LibrosCollection() {
 		super();
-		libros = new ArrayList<Libro>();
+		libros = new ArrayList<>();
 	}
  
 	public List<Libro> getLibro() {
