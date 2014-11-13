@@ -1,5 +1,7 @@
 package edu.upc.edu.eetac.davidcanadagordo.libros_api.model;
 
+
+
 import java.sql.Date;
 
 public class Resena {
@@ -8,7 +10,7 @@ public class Resena {
 	private String username;
 	private Date fecha;
 	private String texto;
-	private int idlibros;
+	private int idlibro;
 	
 	public int getIdres() {
 		return idres;
@@ -34,11 +36,15 @@ public class Resena {
 	public void setTexto(String texto) {
 		this.texto = texto;
 	}
-	public int getIdlibros() {
-		return idlibros;
+	public int getIdlibro() {
+		return idlibro;
 	}
-	public void setIdlibros(int idlibros) {
-		this.idlibros = idlibros;
+	public void setIdlibro(int idlibro) {
+		this.idlibro = idlibro;
+	}
+	public void add(Resena resena) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 	

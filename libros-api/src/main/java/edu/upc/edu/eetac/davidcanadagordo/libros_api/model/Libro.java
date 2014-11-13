@@ -1,7 +1,10 @@
 package edu.upc.edu.eetac.davidcanadagordo.libros_api.model;
 
 
+
+
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.core.Link;
 
@@ -9,14 +12,19 @@ public class Libro {
 	
 	private int id;
 	private String titulo;
-	private String autor;
 	private String lengua;
 	private String edicion;
 	private Date fecha_ed;
 	private Date fecha_imp;
 	private String editorial;
+	private String autor;
 	private List<Link> links;
+	private List<Resena> resena= new ArrayList<Resena>();
+	private List<Autor> autores = new ArrayList<Autor>();
 	
+	public void setResena(List<Resena> resena) {
+		this.resena = resena;
+	}
 	public int getId() {
 		return id;
 	}
@@ -29,17 +37,17 @@ public class Libro {
 	public void setTitulo(String titulo) {
 		this.titulo = titulo;
 	}
-	public String getAutor() {
-		return autor;
-	}
-	public void setAutor(String autor) {
-		this.autor = autor;
-	}
 	public String getLengua() {
 		return lengua;
 	}
 	public void setLengua(String lengua) {
 		this.lengua = lengua;
+	}
+	public String getAutor() {
+		return autor;
+	}
+	public void setAutor(String autor) {
+		this.autor = autor;
 	}
 	public String getEdicion() {
 		return edicion;
@@ -71,7 +79,21 @@ public class Libro {
 	public void setLinks(List<Link> links) {
 		this.links = links;
 	}
-	
+	public List<Resena> getResena() {
+		return resena;
+	}
+	public void addResena(Resena resena) {
+		resena.add(resena);
+	}
+	/*public void setReviews(List<Reviews> review) {
+		this.reviews= review
+		}*/
+	public List<Autor> getAutores() {
+		return autores;
+	}
+	public void setAutores(List<Autor> autores) {
+		this.autores = autores;
+	}
 	
 	
 	/*public int id;

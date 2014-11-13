@@ -9,6 +9,10 @@
             <param-name>jersey.config.server.provider.packages</param-name>
             <param-value>edu.upc.edu.eetac.davidcanadagordo.libros_api</param-value>
             </init-param>
+            <init-param>
+	   <param-name>javax.ws.rs.Application</param-name>
+	   <param-value>edu.upc.edu.eetac.davidcanadagordo.libros_api.LibroApplication</param-value>
+</init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
       <servlet-mapping>
@@ -76,7 +80,6 @@
 	</login-config>
 	<security-role>
 		<role-name>registered</role-name>
-		
 	</security-role>
 
 	<security-constraint>

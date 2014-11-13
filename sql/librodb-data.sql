@@ -51,5 +51,3 @@ insert into autor (name) values ('autor7');
 insert into autor (name) values ('autor8');
 insert into autor (name) values ('autor9');
 insert into autor (name) values ('autor10');
-
-

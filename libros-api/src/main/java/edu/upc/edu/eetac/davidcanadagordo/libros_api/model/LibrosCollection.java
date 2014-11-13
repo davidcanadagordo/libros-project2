@@ -7,7 +7,12 @@ import java.util.List;
 public class LibrosCollection {
 
 	private List<Libro> libros;
- 
+
+
+	public List<Libro> getLibros() {
+		return libros;
+	}
+
 	public LibrosCollection() {
 		super();
 		libros = new ArrayList<>();
