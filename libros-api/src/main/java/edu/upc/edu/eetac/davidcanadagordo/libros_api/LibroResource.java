@@ -43,10 +43,11 @@ public class LibroResource {
 	private DataSource ds = DataSourceSPA.getInstance().getDataSource();
 	@Context
 	private SecurityContext security;
+	Boolean registred, admin;
 
 	// //muestra la BD de libros
 	private String GET_LIBROS_QUERY = "SELECT * FROM libros ";
-
+	private String GET_RESENAS_QUERY_ID= "select * from resenas where idlibro = ?;";
 	@GET
 	@Produces(MediaType.LIBROS_API_LIBRO_COLLECTION)
 	public LibrosCollection getLibro() {
@@ -64,10 +65,11 @@ public class LibroResource {
 		System.out.println("conectados a la BD");
 
 		PreparedStatement stmt = null;
+		
 		try {
 			stmt = conn.prepareStatement(GET_LIBROS_QUERY);
 			ResultSet rs = stmt.executeQuery();
-
+			
 			System.out.println(stmt);
 			while (rs.next()) {
 
@@ -80,9 +82,28 @@ public class LibroResource {
 				libro.setFecha_ed(rs.getDate("fecha_ed"));
 				libro.setFecha_imp(rs.getDate("fecha_imp"));
 				libro.setEditorial(rs.getString("editorial"));
+			
 				
+				
+				//rs2.close();
+				//stmt.close();
+				PreparedStatement stmt2 = null;
+				stmt2 = conn.prepareStatement(GET_RESENAS_QUERY_ID);
+				stmt2.setInt(1, libro.getId()); //obtenemos id de cada libro para poner la reseña correspondiente
+				ResultSet rs2 = stmt2.executeQuery();
+				System.out.println(stmt2);
+				
+				while (rs2.next()) {
+					Resena r = new Resena();
+					r.setIdres(rs2.getInt("idres"));
+					r.setUsername(rs2.getString("username"));
+					r.setFecha(rs2.getDate("fecha"));
+					r.setTexto(rs2.getString("texto"));
+					r.setIdlibro(rs2.getInt("idlibro"));
+					//libro.addResena(r);
+					libro.getResena().add(r);
+				}
 				libros.add(libro);
-
 			}
 
 		} catch (SQLException e) {
@@ -240,6 +261,7 @@ public class LibroResource {
 	public Libro getLibro(@PathParam("id") int id) {
 		
 		Libro libro = new Libro();
+		
 	    Connection conn = null;
 		try {
 			conn = ds.getConnection();
@@ -586,7 +608,7 @@ public class LibroResource {
 					Statement.RETURN_GENERATED_KEYS);
 
 			stmt.setString(1, autor.getName());
-
+			
 			System.out.println(autor.getName());
 			System.out.println(stmt);
 			stmt.executeUpdate();
@@ -645,7 +667,7 @@ public class LibroResource {
 			stmt = conn.prepareStatement(DELETE_AUTOR);
 			stmt.setInt(1, Integer.valueOf(idautor));
 			System.out.println(stmt);
-
+			
 			int rows = stmt.executeUpdate();
 			if (rows == 0) {
 				throw new NotFoundException("No hay un autor con este nombre"
@@ -725,7 +747,7 @@ public class LibroResource {
 	 * ForbiddenException( "You are not allowed to modify this sting."); }
 	 */
 	// //////crear una reseña, solo puede el registrado
-	private String INSERT_RESENA = "insert into resenas (idlibros, username, fecha, texto) values (?,?,?,?);";
+	private String INSERT_RESENA = "insert into resenas (username, fecha, texto, idlibro) values (?,?,?,?);";
 
 	@POST
 	@Path("/{idlibros}/resenas")
@@ -735,12 +757,8 @@ public class LibroResource {
 			Resena resena) {
 
 		if (!security.isUserInRole("registered"))
-			throw new ForbiddenException(
-					"No tienes permitido hacer una reseña de un libro");
-		String registrado = security.getUserPrincipal().getName(); // obtengo
-																	// nombre
-																	// del
-																	// registrado
+			throw new ForbiddenException("No tienes permitido hacer una reseña de un libro");
+		String registrado = security.getUserPrincipal().getName(); // obtengo registrado
 
 		System.out.println("Estas registrado con nombre" + registrado);
 
@@ -755,17 +773,12 @@ public class LibroResource {
 		PreparedStatement stmt = null;
 		try {
 
-			stmt = conn.prepareStatement(INSERT_RESENA,
-					Statement.RETURN_GENERATED_KEYS);
+			stmt = conn.prepareStatement(INSERT_RESENA,Statement.RETURN_GENERATED_KEYS);
 
-			stmt.setInt(1, Integer.valueOf(idlibros));
-			stmt.setString(2, security.getUserPrincipal().getName()); // consigues
-																		// el
-																		// autor
-																		// de la
-																		// resena
-			stmt.setDate(3, resena.getFecha());
-			stmt.setString(4, resena.getTexto());
+			stmt.setInt(4, Integer.valueOf(idlibros));
+			stmt.setString(1, security.getUserPrincipal().getName()); // consigues nombre autor reseña = registrado¿?
+		    stmt.setDate(2, resena.getFecha());
+			stmt.setString(3, resena.getTexto());
 
 			System.out.println(stmt);
 			stmt.executeUpdate();
@@ -801,7 +814,7 @@ public class LibroResource {
 	}
 
 	// /////////Borrar una reseña, solo puede el usuario registrado
-	private String BORRAR_RESENA = "DELETE FROM resenas where idres = ? and idlibros = ?;";
+	private String BORRAR_RESENA = "DELETE FROM resenas where idres = ? and idlibro = ?;";
 
 	@DELETE
 	@Path("/{idlibro}/resenas/{idres}")
@@ -810,8 +823,11 @@ public class LibroResource {
 	public void deleteReview(@PathParam("idlibro") String idlibro,
 			@PathParam("idres") String idres) {
 		{
+			//setRegistered(security.isUserInRole("registered"));
+			//setRegistered(security.isUserInRole("admin"));
+			
 			// tienes que estar registrado
-			if (!security.isUserInRole("registrado"))
+			if (!security.isUserInRole("registered"))
 				throw new ForbiddenException(
 						"No se te permite borrar una reseña");
 
@@ -826,6 +842,11 @@ public class LibroResource {
 			System.out.println("conectados a la bd");
 			System.out.println("idlibro" + idlibro + "idres" + idres);
 			PreparedStatement stmt = null;
+		
+			//sino es el registrado = usuario no puede borrar
+			String username = security.getUserPrincipal().getName();
+			if (security.getUserPrincipal().getName().equals(username))
+			{
 			try {
 				stmt = conn.prepareStatement(BORRAR_RESENA);
 				stmt.setInt(1, Integer.valueOf(idlibro));
@@ -839,10 +860,12 @@ public class LibroResource {
 				} else {
 					System.out.println("Reseña eliminado");
 				}
-			} catch (SQLException e) {
+			}
+			catch (SQLException e) {
 				throw new ServerErrorException(e.getMessage(),
 						Response.Status.INTERNAL_SERVER_ERROR);
-			} finally {
+			} 
+			finally {
 				try {
 					if (stmt != null)
 						stmt.close();
@@ -850,11 +873,20 @@ public class LibroResource {
 				} catch (SQLException e) {
 				}
 			}
+			}
+			else {
+				throw new NotFoundException("Esta reseña no es tuya, no puedes eliminarla");
+				
+			
+			}
+		
 
 			// no retorna nada el delete, es un void!
 		}
 	}
 
+	
+	
 	// /////actualizamos una reseña de un usuario registrado
 	private String UPDATE_RESENA = "UPDATE resenas set texto=ifnull(?, texto) where idlibro = ? and idres = ?;";
 
@@ -956,4 +988,5 @@ public class LibroResource {
 
 		return resena;
 	}
+	
 }
