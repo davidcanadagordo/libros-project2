@@ -15,10 +15,11 @@ import edu.upc.edu.eetac.davidcanadagordo.libros_api.MediaType;
 
 public class LibrosCollection {
 	
-	  @InjectLinks({
+	 @InjectLinks({
 		  @InjectLink(resource = LibroResource.class, style = Style.ABSOLUTE, rel = "self", title = "libros", type = MediaType.LIBROS_API_LIBRO_COLLECTION),
 		  @InjectLink(resource = LibroResource.class, style = Style.ABSOLUTE, rel = "libro", title = "libro", type = MediaType.LIBROS_API_LIBRO)
-			})
+	  }) 
+	
 	private List<Link> links;
 	public List<Link> getLinks() {
 		return links;
