@@ -68,6 +68,7 @@
         <dependency>
         	<groupId>org.glassfish.jersey.ext</groupId>
         	<artifactId>jersey-declarative-linking</artifactId>
+        	<version>2.13</version>
         </dependency>
         <dependency>
         	<groupId>com.thetransactioncompany</groupId>

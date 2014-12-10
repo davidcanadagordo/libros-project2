@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Libros</string>
+    <string name="hello_world">Hello Libros!</string>
+    <string name="action_settings">Prueba menu</string>
+    <string name="login_l_username">Username</string>
+    <string name="login_l_password">Password</string>
+    <string name="login_l_signin">Sign in</string>
+    <string name="login_l_register">Register in Libros</string>
+
+</resources>

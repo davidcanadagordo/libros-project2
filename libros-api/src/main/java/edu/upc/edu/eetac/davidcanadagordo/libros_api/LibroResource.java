@@ -1,6 +1,7 @@
 package edu.upc.edu.eetac.davidcanadagordo.libros_api;
 
 import javax.sql.DataSource; 
+
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -26,7 +27,7 @@ import edu.upc.edu.eetac.davidcanadagordo.libros_api.model.Libro;
 import edu.upc.edu.eetac.davidcanadagordo.libros_api.model.LibrosCollection;
 import edu.upc.edu.eetac.davidcanadagordo.libros_api.model.Resena;
 import edu.upc.edu.eetac.davidcanadagordo.libros_api.DataSourceSPA;
-import edu.upc.edu.eetac.davidcanadagordo.libros_api.model.ResenaCollection;
+
 
 import java.sql.Connection;
 import java.sql.Date;

@@ -6,11 +6,23 @@ package edu.upc.edu.eetac.davidcanadagordo.libros_api.model;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.ws.rs.core.Link;
+import org.glassfish.jersey.linking.Binding;
+import org.glassfish.jersey.linking.InjectLink;
+import org.glassfish.jersey.linking.InjectLink.Style;
+import org.glassfish.jersey.linking.InjectLinks;
+
+import edu.upc.edu.eetac.davidcanadagordo.libros_api.LibroResource;
+import edu.upc.edu.eetac.davidcanadagordo.libros_api.MediaType;
 
 public class Libro {
 	
-	private int id;
+	@InjectLinks({
+		@InjectLink(resource = LibroResource.class, style = Style.ABSOLUTE, rel = "self edit", title = "Libro", type = MediaType.LIBROS_API_LIBRO, method = "getLibro", bindings = @Binding(name = "id", value = "${instance.id}")), 
+		@InjectLink(resource = LibroResource.class, style = Style.ABSOLUTE, rel = "crear-libro", title = "Crear Libro", type = MediaType.LIBROS_API_LIBRO, method = "CreateLibro")
+})
+	int id;
 	private String titulo;
 	private String lengua;
 	private String edicion;
@@ -94,7 +106,7 @@ public class Libro {
 	public void setAutores(List<Autor> autores) {
 		this.autores = autores;
 	}
-	
+
 	
 	/*public int id;
 	public String autor;
