@@ -4,6 +4,8 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
+import edu.upc.edu.eetac.davidcanadagordo.libros_api.model.LibroError;
+
  
 
 public class WebApplicationExceptionMapper implements ExceptionMapper<WebApplicationException> {

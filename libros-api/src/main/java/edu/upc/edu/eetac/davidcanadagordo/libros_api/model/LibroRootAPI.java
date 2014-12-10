@@ -1,4 +1,6 @@
-package edu.upc.edu.eetac.davidcanadagordo.libros_api;
+package edu.upc.edu.eetac.davidcanadagordo.libros_api.model;
+
+
 
 import edu.upc.edu.eetac.davidcanadagordo.libros_api.LibrosRootAPIResource;
 import edu.upc.edu.eetac.davidcanadagordo.libros_api.MediaType;

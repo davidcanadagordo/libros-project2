@@ -1,4 +1,4 @@
-package edu.upc.edu.eetac.davidcanadagordo.libros_api;
+package edu.upc.edu.eetac.davidcanadagordo.libros_api.model;
 
 public class LibroError {
 	private int status;

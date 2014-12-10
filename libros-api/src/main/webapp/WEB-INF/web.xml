@@ -109,6 +109,6 @@
 			<role-name>registered</role-name>
 			<role-name>admin</role-name>
 		</auth-constraint>
-	</security-constraint>ç
+	</security-constraint>
 	
 	</web-app>

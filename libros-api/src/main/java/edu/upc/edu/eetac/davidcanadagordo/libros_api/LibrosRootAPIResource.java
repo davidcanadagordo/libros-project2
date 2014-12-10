@@ -1,9 +1,10 @@
 package edu.upc.edu.eetac.davidcanadagordo.libros_api;
 
 import javax.ws.rs.GET;
+
 import javax.ws.rs.Path;
 
-import edu.upc.edu.eetac.davidcanadagordo.libros_api.LibroRootAPI;
+import edu.upc.edu.eetac.davidcanadagordo.libros_api.model.LibroRootAPI;
 
 @Path("/")
 public class LibrosRootAPIResource {
